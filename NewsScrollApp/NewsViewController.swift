@@ -12,7 +12,7 @@ import WebKit
 import NVActivityIndicatorView 
 
 class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDataSource, UITableViewDelegate, WKNavigationDelegate, XMLParserDelegate{
-
+    
     // 引っ張って更新
     var refreshControl: UIRefreshControl!
     
@@ -242,7 +242,7 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
         toolBar.isHidden = true
         webView.isHidden = true
     }
-
+    
     // 戻る
     @IBAction func backPage(_ sender: Any) {
         webView.goBack()
@@ -255,7 +255,7 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
     @IBAction func refreshPage(_ sender: Any) {
         webView.reload()
     }
-
+    
     func indicatorInfo(for pagerTabStripController: PagerTabStripViewController) -> IndicatorInfo {
         return itemInfo
     }
