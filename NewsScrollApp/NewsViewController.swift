@@ -38,7 +38,6 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
     // XMLファイルのリンク情報
     var linkString: String = ""
     
-    
     // webview
     @IBOutlet weak var webView: WKWebView!
     
@@ -76,10 +75,8 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
         webView.isHidden = true
         toolBar.isHidden = true
         
-        
         // インジケータと背景を作る
         createIndicator()
-        
         parseUrl()
     }
     
@@ -109,6 +106,7 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
         // TableViewのリロード
         tableView.reloadData()
     }
+    
     // 解析中に要素の開始タグがあったときに実行されるメソッド
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         
@@ -206,7 +204,6 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
     // インジケータの処理
     // インジケータと背景のviewを作る処理
     func createIndicator() {
-        
         // インジケータ関連
         // インジケータの生成
         indicatorView = NVActivityIndicatorView(frame: CGRect(x: 0, y: 0, width: 60, height: 60), type: .ballScaleRippleMultiple, color: UIColor.blue, padding: 0)
