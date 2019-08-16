@@ -16,7 +16,7 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
     // 引っ張って更新
     var refreshControl: UIRefreshControl!
     
-    private var indicatorView: NVActivityIndicatorView!
+    var indicatorView: NVActivityIndicatorView!
     
     // ロード画面時のview
     var indicatorBackgroundView: UIView!
