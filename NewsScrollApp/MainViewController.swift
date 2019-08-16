@@ -9,6 +9,7 @@
 import UIKit
 import XLPagerTabStrip
 
+
 class MainViewController: ButtonBarPagerTabStripViewController {
 
     // URLの文字列（yahoo,NHK,週刊文春)
@@ -18,10 +19,8 @@ class MainViewController: ButtonBarPagerTabStripViewController {
 
     // タブの名前の表示
     var iteminfo: [IndicatorInfo] = ["Yahoo!", "NHK", "週刊文春"]
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
+    
+    
 
     // 各VCを返す処理
     override func viewControllers(for pagerTabStripController: PagerTabStripViewController) -> [UIViewController] {
@@ -43,7 +42,9 @@ class MainViewController: ButtonBarPagerTabStripViewController {
 
         }
         // VCを返す
+        
         return childViewControllers
+        
     }
 }
 

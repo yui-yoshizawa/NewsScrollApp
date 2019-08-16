@@ -9,18 +9,24 @@
 import UIKit
 import XLPagerTabStrip
 import WebKit
+import NVActivityIndicatorView 
 
 class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDataSource, UITableViewDelegate, WKNavigationDelegate, XMLParserDelegate{
-
+    
     // 引っ張って更新
     var refreshControl: UIRefreshControl!
-
+    
+    var indicatorView: NVActivityIndicatorView!
+    
+    // ロード画面時のview
+    var indicatorBackgroundView: UIView!
+    
     // テーブルビューのインスタンスを取得
     var tableView: UITableView = UITableView()
-
+    
     // XMLParserのインスタンスを取得
     var parser = XMLParser()
-
+    
     // 記事情報の配列の入れ物
     var articles: [Any] = []
     // XMLファイルに解析をかけた情報
@@ -31,11 +37,10 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
     var titleString: String = ""
     // XMLファイルのリンク情報
     var linkString: String = ""
-
-
+    
     // webview
     @IBOutlet weak var webView: WKWebView!
-
+    
     // toolbar(4つのボタンがはいってる)
     @IBOutlet weak var toolBar: UIToolbar!
     
@@ -43,47 +48,49 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
     var url: String = ""
     // itemInfoを受け取る
     var itemInfo: IndicatorInfo = ""
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // refreshControlのインスタンス
         refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
-
+        
         // デリゲートとの接続
         tableView.delegate = self
         tableView.dataSource = self
-
+        
         // navigationDelegateとの接続
         webView.navigationDelegate = self
-
+        
         // tableviewのサイズを確定
         tableView.frame = CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.height)
-
+        
         // tableviewをviewに追加
         self.view.addSubview(tableView)
-
+        
         // refreshControlをテーブルビューにつける
         tableView.addSubview(refreshControl)
-
+        
         // 最初は隠す（tableviewが表示されるのを邪魔しないように）
         webView.isHidden = true
         toolBar.isHidden = true
-
+        
+        // インジケータと背景を作る
+        createIndicator()
         parseUrl()
     }
-
+    
     @objc func refresh() {
         // 2秒後にdelayを呼ぶ
         perform(#selector(delay), with: nil, afterDelay: 2.0)
     }
-
+    
     @objc func delay() {
         parseUrl()
         // refreshControlを終了
         refreshControl.endRefreshing()
     }
-
+    
     // urlを解析する
     func parseUrl() {
         // url型に変換
@@ -99,9 +106,10 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
         // TableViewのリロード
         tableView.reloadData()
     }
+    
     // 解析中に要素の開始タグがあったときに実行されるメソッド
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
-
+        
         // elememtNameにタグの名前が入ってくるのでelementに代入
         elememt = elementName
         // エレメントにタイトルが入ってきたら
@@ -112,17 +120,17 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
             linkString = ""
         }
     }
-
+    
     // 開始タグと終了タグでくくられたデータがあったときに実行されるメソッド
     func parser(_ parser: XMLParser, foundCharacters string: String) {
-
+        
         if elememt == "title" {
             titleString.append(string)
         } else if elememt == "link" {
             linkString.append(string)
         }
     }
-
+    
     // 終了タグを見つけた時
     func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         // アイテムという要素の中にあるなら、
@@ -141,38 +149,38 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
             articles.append(elements)
         }
     }
-
+    
     // セルの高さ
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100
     }
-
+    
     // セルの数
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // 記事の数だけセルを返す
         return articles.count
     }
-
+    
     // セルの設定
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "Cell")
-
+        
         // セルの色
         cell.backgroundColor = #colorLiteral(red: 0.8321695924, green: 0.985483706, blue: 0.4733308554, alpha: 1)
-
+        
         // 記事テキストサイズとフォント
         cell.textLabel?.font = UIFont.boldSystemFont(ofSize: 15)
         cell.textLabel?.text = (articles[indexPath.row] as AnyObject).value(forKey: "title") as? String
         cell.textLabel?.textColor = UIColor.black
-
+        
         // 記事urlのサイズとフォント
         cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 13)
         cell.detailTextLabel?.text = (articles[indexPath.row] as AnyObject).value(forKey: "link") as? String
         cell.detailTextLabel?.textColor = UIColor.gray
-
+        
         return cell
     }
-
+    
     // セルをタップしたときの処理
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //
@@ -182,10 +190,35 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
             return
         }
         let urlRequest = NSURLRequest(url: url)
+        
+        // 背景を暗くする
+        self.view.addSubview(indicatorBackgroundView)
+        // インジケータの表示
+        indicatorView.startAnimating()
+        // セルを選択できなくする
+        self.tableView.allowsSelection = false
         // ここでロード
         webView.load(urlRequest as URLRequest)
     }
-
+    
+    // インジケータの処理
+    // インジケータと背景のviewを作る処理
+    func createIndicator() {
+        // インジケータ関連
+        // インジケータの生成
+        indicatorView = NVActivityIndicatorView(frame: CGRect(x: 0, y: 0, width: 60, height: 60), type: .ballScaleRippleMultiple, color: UIColor.blue, padding: 0)
+        // インジケータの位置を画面中央にする
+        indicatorView.center = CGPoint(x: self.view.center.x, y: self.view.center.y - 50)
+        // インジケータの表示
+        self.view.addSubview(indicatorView)
+        // インジケータの背景
+        indicatorBackgroundView = UIView(frame: self.view.bounds)
+        // 背景色を黒にする
+        indicatorBackgroundView.backgroundColor = UIColor.black
+        // 透明度を変更
+        indicatorBackgroundView.alpha = 0.4
+    }
+    
     // ページの読み込み完了時に呼ばれる
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         //tableviewを隠す
@@ -194,15 +227,22 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
         toolBar.isHidden = false
         // webviewを表示する
         webView.isHidden = false
+        
+        // インジケータを停止させる
+        indicatorView.stopAnimating()
+        // 背景を元に戻す
+        indicatorBackgroundView.removeFromSuperview()
+        // セルを選択できるようにする
+        self.tableView.allowsSelection = true
     }
-
+    
     // キャンセル
     @IBAction func cancel(_ sender: Any) {
         tableView.isHidden = false
         toolBar.isHidden = true
         webView.isHidden = true
     }
-
+    
     // 戻る
     @IBAction func backPage(_ sender: Any) {
         webView.goBack()
@@ -215,9 +255,8 @@ class NewsViewController: UIViewController, IndicatorInfoProvider, UITableViewDa
     @IBAction func refreshPage(_ sender: Any) {
         webView.reload()
     }
-
+    
     func indicatorInfo(for pagerTabStripController: PagerTabStripViewController) -> IndicatorInfo {
         return itemInfo
     }
-
 }
